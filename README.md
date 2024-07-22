@@ -16,39 +16,47 @@ In this project, we explore how to wrap a UIKit view controller (specifically `P
 
 ## Implementation Details
 
-1. **ImagePicker Struct**: This struct conforms to `UIViewControllerRepresentable` and wraps a `PHPickerViewController`. It defines the `makeUIViewController` and `updateUIViewController` methods to manage the UIKit view controller's lifecycle.
+### ImagePicker Struct
 
-2. **Coordinator Class**: Nested inside `ImagePicker`, this class conforms to `PHPickerViewControllerDelegate` and handles the communication between the picker and the SwiftUI view. It updates the bound image property when a user selects an image.
-
-## Usage
-
-To use the image picker in your SwiftUI view, you need to create an instance of `ImagePicker` and provide a binding to a `UIImage?` property. When the user selects an image, the coordinator updates this bound property, and the SwiftUI view can react to the change.
-
-### Example
-
-Here's a simple usage example in a SwiftUI view:
+The `ImagePicker` struct wraps a `PHPickerViewController` and manages its lifecycle. It uses a coordinator to handle communication between the picker and SwiftUI.
 
 ```swift
 import SwiftUI
+import PhotosUI
 
-struct ContentView: View {
-    @State private var image: UIImage?
-    @State private var showingImagePicker = false
+struct ImagePicker: UIViewControllerRepresentable {
+    @Binding var image: UIImage?
 
-    var body: some View {
-        VStack {
-            if let image = image {
-                Image(uiImage: image)
-                    .resizable()
-                    .scaledToFit()
-            }
+    func makeUIViewController(context: Context) -> PHPickerViewController {
+        var config = PHPickerConfiguration()
+        config.filter = .images
 
-            Button("Select Image") {
-                showingImagePicker = true
-            }
-        }
-        .sheet(isPresented: $showingImagePicker) {
-            ImagePicker(image: $image)
-        }
+        let picker = PHPickerViewController(configuration: config)
+        picker.delegate = context.coordinator
+        return picker
     }
-}
+
+    func updateUIViewController(_ uiViewController: PHPickerViewController, context: Context) {}
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(self)
+    }
+
+    class Coordinator: NSObject, PHPickerViewControllerDelegate {
+        var parent: ImagePicker
+
+        init(_ parent: ImagePicker) {
+            self.parent = parent
+        }
+
+        func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
+            picker.dismiss(animated: true)
+
+            guard let provider = results.first?.itemProvider else { return }
+
+            if provider.canLoadObject(ofClass: UIImage.self) {
+                provider.loadObject(ofClass: UIImage.self) { image, _ in
+                    self.parent.image = image as? UIImage
+                }
+            }
+       ​⬤
