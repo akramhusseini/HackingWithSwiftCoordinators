@@ -1,5 +1,5 @@
 //
-//  ContentView.swift
+//  ImagePickerPreview.swift
 //  HackingWithSwiftCoordinators
 //
 //  Created by Akram Husseini on 22/07/2024.
@@ -7,9 +7,8 @@
 
 import SwiftUI
 
-struct ContentView: View {
+struct ImagePickerPreview: View {
     @State private var image: UIImage?
-    @State private var showingImagePicker = false
 
     var body: some View {
         VStack {
@@ -23,20 +22,14 @@ struct ContentView: View {
                     .foregroundColor(.gray)
                     .frame(height: 200)
             }
-
-            Button("Select Image") {
-                showingImagePicker = true
-            }
-            .padding()
-        }
-        .sheet(isPresented: $showingImagePicker) {
             ImagePicker(image: $image)
+                .frame(height: 300) // This frame is just to show the ImagePicker in the preview
         }
     }
 }
 
-struct ContentView_Previews: PreviewProvider {
+struct ImagePickerPreview_Previews: PreviewProvider {
     static var previews: some View {
-        ContentView()
+        ImagePickerPreview()
     }
 }
